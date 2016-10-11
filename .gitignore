@@ -3,3 +3,4 @@ CocoaVersionCheck/bin/
 CocoaVersionCheck/obj/
 packages/
 *.userprefs
+*.user
