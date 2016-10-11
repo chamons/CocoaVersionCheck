@@ -88,12 +88,25 @@ namespace CocoaVersionCheck
 
 					if (memberType is MemberReference)
 					{
-						MethodDefinition method = resolvedType.Methods.First (x => x.Name == memberType.Name);
+						MethodDefinition method = resolvedType.Methods.FirstOrDefault (x => x.Name == memberType.Name);
+						if (method == null)
+						{
+							if (EntryPoint.Verbose)
+								Console.WriteLine ("Unable to resolve: {0} on {1}", memberType.Name, memberType.DeclaringType);
+							continue;
+						}
 						CheckAttributes (minVersion, resolvedType.Name + "." + memberType.Name, method.CustomAttributes);
 					}
 					else if (memberType is PropertyReference)
 					{
-						PropertyDefinition property = resolvedType.Properties.First (x => x.Name == memberType.Name);
+						PropertyDefinition property = resolvedType.Properties.FirstOrDefault (x => x.Name == memberType.Name);
+						if (property == null)
+						{
+							if (EntryPoint.Verbose)
+								Console.WriteLine ("Unable to resolve: {0} on {1}", memberType.Name, memberType.DeclaringType);
+							continue;
+						}
+
 						CheckAttributes (minVersion, resolvedType.Name + "." + property.Name, property.CustomAttributes);
 					}
 					else
