@@ -33,7 +33,7 @@ namespace CocoaVersionCheck
 			}
 
 			if (EntryPoint.Verbose)
-				Console.WriteLine ("Minimum Version - {0}", version);
+				Console.WriteLine ("Minimum Version - {0}\n", version);
 
 			return version;
 		}
