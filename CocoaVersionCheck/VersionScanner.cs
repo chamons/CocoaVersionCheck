@@ -165,9 +165,9 @@ namespace CocoaVersionCheck
 			foreach (var v in Violations)
 			{
 				if (v.Value == null)
-					Console.Write ("{0} is Unavailable", v.Key);
+					Console.WriteLine ("{0} is Unavailable", v.Key);
 				else
-					Console.Write ("{0} was introduced in {1} ", v.Key, v.Value);
+					Console.WriteLine ("{0} was introduced in {1}", v.Key, v.Value);
 			}
 			return Violations.Count > 0 ? -1 : 0;
 		}
