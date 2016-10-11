@@ -168,9 +168,8 @@ namespace CocoaVersionCheck
 					Console.Write ("{0} is Unavailable", v.Key);
 				else
 					Console.Write ("{0} was introduced in {1} ", v.Key, v.Value);
-				return -1;
 			}
-			return 0;
+			return Violations.Count > 0 ? -1 : 0;
 		}
 	}
 }
