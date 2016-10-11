@@ -12,6 +12,7 @@ namespace CocoaVersionCheck
 		string MonoBundlePath => Path.Combine (BundlePath, "Contents/MonoBundle");
 		string InfoPath => Path.Combine (BundlePath, "Contents/Info.plist");
 
+		DefaultAssemblyResolver resolver;
 		Dictionary<string, Version> Violations = new Dictionary<string, Version> ();
 
 		public VersionScanner (string bundlePath)
@@ -20,6 +21,9 @@ namespace CocoaVersionCheck
 				throw new InvalidOperationException ();
 			
 			BundlePath = bundlePath;
+
+			resolver = new DefaultAssemblyResolver ();
+			resolver.AddSearchDirectory (MonoBundlePath);
 		}
 
 		// TODO - Pass info or print detailed reason we're rejecting
@@ -61,7 +65,7 @@ namespace CocoaVersionCheck
 
 			// 2. Get main.exe and user dll it depends on
 			string mainExecutable = Directory.GetFiles (MonoBundlePath, "*.exe")[0];
-			ModuleDefinition mainDef = ModuleDefinition.ReadModule (mainExecutable);
+			ModuleDefinition mainDef = ModuleDefinition.ReadModule (mainExecutable, new ReaderParameters () { AssemblyResolver = resolver });
 
 			List<ModuleDefinition> userModules = new List<ModuleDefinition> () { mainDef };
 			userModules.AddRange (mainDef.AssemblyReferences.Where (x => !AssemblyBlacklist.Contains (x.Name)). Select (x => ResolveDependency (x.Name)));
@@ -105,7 +109,7 @@ namespace CocoaVersionCheck
 		ModuleDefinition ResolveDependency (string name)
 		{
 			string libPath = Path.Combine (MonoBundlePath, name + ".dll");
-			return ModuleDefinition.ReadModule (libPath);
+			return ModuleDefinition.ReadModule (libPath, new ReaderParameters () { AssemblyResolver = resolver });
 		}
 
 		void CheckAttributes (Version minVersion, string name, IEnumerable<CustomAttribute> attributes)
