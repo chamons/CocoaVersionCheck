@@ -138,20 +138,26 @@ namespace CocoaVersionCheck
 						int minor = (int)attribute.ConstructorArguments[2].Value;
 						Version apiVersion = new Version (major, minor);
 						if (apiVersion > minVersion)
-							Violations.Add (name, apiVersion);
+							AddViolation (name, apiVersion);
 						break;
 					}
 					case "UnavailableAttribute":
 					{
-						int platform = (int)attribute.ConstructorArguments[0].Value;
-						if (platform == 1)
-							Violations.Add (name, null);
+						var platform = (ObjCRuntime.PlatformName)attribute.ConstructorArguments[0].Value;
+						if (platform == ObjCRuntime.PlatformName.MacOSX)
+							AddViolation (name, null);
 						break;
 					}
 					default:
 						break;
 				}
 			}
+		}
+
+		void AddViolation (string name, Version version)
+		{
+			if (!Violations.ContainsKey (name))
+				Violations.Add (name, version);
 		}
 
 		public int PrintResults ()
