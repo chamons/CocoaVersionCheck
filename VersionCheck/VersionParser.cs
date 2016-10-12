@@ -1,9 +1,10 @@
 ﻿using System;
-namespace CocoaVersionCheck
+
+namespace VersionCheck
 {
-	public static class VersionParser
+	static class VersionParser
 	{
-		public static Version FindBundleMinVersion (string infoPath)
+		internal static Version FindBundleMinVersion (string infoPath, bool verbose)
 		{
 			string[] plistText = ProcessHelper.Run ("/usr/bin/plutil", "-convert xml1 -o - " + infoPath).Split ('\n');
 
@@ -32,7 +33,7 @@ namespace CocoaVersionCheck
 				return new Version (10, 7);
 			}
 
-			if (EntryPoint.Verbose)
+			if (verbose)
 				Console.WriteLine ("Minimum Version - {0}\n", version);
 
 			return version;
