@@ -3,6 +3,12 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CocoaVersionCheck", "CocoaVersionCheck\CocoaVersionCheck.csproj", "{78F46A9B-4D40-44E8-84D1-3D45F3BB9B18}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CocoaVersionCheck.Tests", "CocoaVersionCheck.Tests\CocoaVersionCheck.Tests.csproj", "{B4054018-8621-4A20-818B-7CCB823A966C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GuiUnit_NET_4_5", "external\guiunit\src\framework\GuiUnit_NET_4_5.csproj", "{D12F0F7B-8DE3-43EC-BA49-41052D065A9B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VersionCheck", "VersionCheck\VersionCheck.csproj", "{262C2FBC-9A25-45D5-A0D8-D1CE368C2E84}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -13,5 +19,17 @@ Global
 		{78F46A9B-4D40-44E8-84D1-3D45F3BB9B18}.Debug|x86.Build.0 = Debug|x86
 		{78F46A9B-4D40-44E8-84D1-3D45F3BB9B18}.Release|x86.ActiveCfg = Release|x86
 		{78F46A9B-4D40-44E8-84D1-3D45F3BB9B18}.Release|x86.Build.0 = Release|x86
+		{B4054018-8621-4A20-818B-7CCB823A966C}.Debug|x86.ActiveCfg = Debug|x86
+		{B4054018-8621-4A20-818B-7CCB823A966C}.Debug|x86.Build.0 = Debug|x86
+		{B4054018-8621-4A20-818B-7CCB823A966C}.Release|x86.ActiveCfg = Release|x86
+		{B4054018-8621-4A20-818B-7CCB823A966C}.Release|x86.Build.0 = Release|x86
+		{D12F0F7B-8DE3-43EC-BA49-41052D065A9B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D12F0F7B-8DE3-43EC-BA49-41052D065A9B}.Debug|x86.Build.0 = Debug|Any CPU
+		{D12F0F7B-8DE3-43EC-BA49-41052D065A9B}.Release|x86.ActiveCfg = Release|Any CPU
+		{D12F0F7B-8DE3-43EC-BA49-41052D065A9B}.Release|x86.Build.0 = Release|Any CPU
+		{262C2FBC-9A25-45D5-A0D8-D1CE368C2E84}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{262C2FBC-9A25-45D5-A0D8-D1CE368C2E84}.Debug|x86.Build.0 = Debug|Any CPU
+		{262C2FBC-9A25-45D5-A0D8-D1CE368C2E84}.Release|x86.ActiveCfg = Release|Any CPU
+		{262C2FBC-9A25-45D5-A0D8-D1CE368C2E84}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -7,4 +7,5 @@ CocoaVersionCheck is a quick hack that allows one to use Cecil to scan your appl
 
 # Building
 
+git submodule update --init --recursive
 xbuild CocoaVersionCheck.sln

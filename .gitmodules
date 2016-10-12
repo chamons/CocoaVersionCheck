@@ -1,0 +1,3 @@
+[submodule "external/guiunit"]
+	path = external/guiunit
+	url = git@github.com:mono/guiunit.git

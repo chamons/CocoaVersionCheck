@@ -1,6 +1,6 @@
 .DS_Store
-CocoaVersionCheck/bin/
-CocoaVersionCheck/obj/
+*/bin/
+*/obj/
 packages/
 *.userprefs
 *.user

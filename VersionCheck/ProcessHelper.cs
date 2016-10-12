@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace CocoaVersionCheck
+namespace VersionCheck
 {
-	public static class ProcessHelper
+	internal static class ProcessHelper
 	{
-		public static string Run (string path, string[] args)
+		internal static string Run (string path, string[] args)
 		{
 			return Run (path, String.Join (" ", args));
 		}
 		
-		public static string Run (string path, string args)
+		internal static string Run (string path, string args)
 		{
 			ProcessStartInfo startInfo = new ProcessStartInfo ()
 			{

@@ -4,10 +4,11 @@ using System.IO;
 using System.Linq;
 using Mono.Cecil;
 
-namespace CocoaVersionCheck
+namespace VersionCheck
 {
 	public class VersionScanner
 	{
+		bool Verbose;
 		string BundlePath;
 		string MonoBundlePath => Path.Combine (BundlePath, "Contents/MonoBundle");
 		string InfoPath => Path.Combine (BundlePath, "Contents/Info.plist");
@@ -15,11 +16,12 @@ namespace CocoaVersionCheck
 		DefaultAssemblyResolver resolver;
 		Dictionary<string, Version> Violations = new Dictionary<string, Version> ();
 
-		public VersionScanner (string bundlePath)
+		public VersionScanner (string bundlePath, bool verbose)
 		{
 			if (!IsValidBundle (bundlePath))
 				throw new InvalidOperationException ();
-			
+
+			Verbose = verbose;
 			BundlePath = bundlePath;
 
 			resolver = new DefaultAssemblyResolver ();
@@ -61,7 +63,7 @@ namespace CocoaVersionCheck
 		public void Scan ()
 		{
 			// 1. Dig out the min version from info.list
-			Version minVersion = VersionParser.FindBundleMinVersion (InfoPath);
+			Version minVersion = VersionParser.FindBundleMinVersion (InfoPath, Verbose);
 
 			// 2. Get main.exe and user dll it depends on
 			string mainExecutable = Directory.GetFiles (MonoBundlePath, "*.exe")[0];
@@ -70,7 +72,7 @@ namespace CocoaVersionCheck
 			List<ModuleDefinition> userModules = new List<ModuleDefinition> () { mainDef };
 			userModules.AddRange (mainDef.AssemblyReferences.Where (x => !AssemblyBlacklist.Contains (x.Name)). Select (x => ResolveDependency (x.Name)));
 
-			if (EntryPoint.Verbose)
+			if (Verbose)
 				Console.WriteLine ("User Assemblies Resolved: {0}", String.Join (" ", userModules.Select (x => x.Name)));
 
 			// 3. Reflect over them all, looking for Xamarin.Mac references and check for attributes
@@ -91,7 +93,7 @@ namespace CocoaVersionCheck
 						MethodDefinition method = resolvedType.Methods.FirstOrDefault (x => x.Name == memberType.Name);
 						if (method == null)
 						{
-							if (EntryPoint.Verbose)
+							if (Verbose)
 								Console.WriteLine ("Unable to resolve: {0} on {1}", memberType.Name, memberType.DeclaringType);
 							continue;
 						}
@@ -102,7 +104,7 @@ namespace CocoaVersionCheck
 						PropertyDefinition property = resolvedType.Properties.FirstOrDefault (x => x.Name == memberType.Name);
 						if (property == null)
 						{
-							if (EntryPoint.Verbose)
+							if (Verbose)
 								Console.WriteLine ("Unable to resolve: {0} on {1}", memberType.Name, memberType.DeclaringType);
 							continue;
 						}
