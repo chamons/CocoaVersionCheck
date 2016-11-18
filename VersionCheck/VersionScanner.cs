@@ -57,18 +57,24 @@ namespace VersionCheck
 			}
 		}
 
-		// TODO - Right now we're just looking at static linkages to exe. We should also let user to pass in additional
-		// libs to scan. 
 		public void Scan ()
 		{
 			// 1. Dig out the min version from info.list
 			Version minVersion = VersionParser.FindBundleMinVersion (InfoPath, Verbose);
 
 			// 2. Get main.exe and user dll it depends on
-			string mainExecutable = Directory.GetFiles (MonoBundlePath, "*.exe")[0];
-
 			AssemblyResolver resolver = new AssemblyResolver (MonoBundlePath, Verbose);
-			List<ModuleDefinition> userModules = resolver.ResolveReferences (mainExecutable);
+			List<ModuleDefinition> userModules;
+
+			if (Options.ScanAllAssemblies)
+			{
+				var files = Directory.EnumerateFiles (MonoBundlePath).Where (x => x.ToLower ().EndsWith (".exe", StringComparison.Ordinal) || x.ToLower ().EndsWith (".dll", StringComparison.Ordinal));
+				userModules = resolver.ResolveReferences (files);
+			}
+			else
+			{
+				userModules = resolver.ResolveReferences (Directory.GetFiles (MonoBundlePath, "*.exe")[0]);
+			}
 		
 			if (Verbose)
 				Console.WriteLine ("User Assemblies Resolved: {0}", String.Join (" ", userModules.Select (x => x.Name)));

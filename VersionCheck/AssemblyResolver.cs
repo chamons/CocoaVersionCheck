@@ -25,21 +25,33 @@ namespace VersionCheck
 			Verbose = verbose;
 		}
 
-		public List<ModuleDefinition> ResolveReferences (string mainExecutable)
+		public List<ModuleDefinition> ResolveReferences (string rootAssembly)
 		{
-			List<ModuleDefinition> userModules = new List<ModuleDefinition> ();
+			return ResolveReferences (new List<string> () { rootAssembly });
+		}
+
+		public List<ModuleDefinition> ResolveReferences (IEnumerable<string> rootAssemblies)
+		{
 			Stack<ModuleDefinition> modulesToResolve = new Stack<ModuleDefinition> ();
-			modulesToResolve.Push (ModuleDefinition.ReadModule (mainExecutable, readerParams));
+			foreach (var root in rootAssemblies)
+				modulesToResolve.Push (ModuleDefinition.ReadModule (root, readerParams));
+
+			List<ModuleDefinition> userModules = new List<ModuleDefinition> ();
 
 			while (modulesToResolve.Count > 0)
 			{
 				var current = modulesToResolve.Pop ();
+				if (userModules.Any (x => x.Name == current.Name))
+					continue;
+
 				if (Verbose)
 					Console.WriteLine ("Resolving {0}", current.Name);
+				
 				foreach (var dependency in current.AssemblyReferences.Where (x => !IsBlackListed (x.Name)))
 				{
 					if (Verbose)
 						Console.WriteLine ("\tFound Dependency {0}", dependency.Name);
+					
 					try
 					{
 						ModuleDefinition resolvedDependency = ResolveDependency (dependency.Name);
@@ -54,7 +66,7 @@ namespace VersionCheck
 
 				userModules.Add (current);
 			}
-			return userModules;
+			return userModules.ToList ();
 		}
 
 		ModuleDefinition ResolveDependency (string name)

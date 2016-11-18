@@ -18,9 +18,14 @@ namespace CocoaVersionCheck
 			var os = new OptionSet () {
 				{ "h|?|help", "Displays the help", v => versionCheckOptions.ShowHelp = true},
 				{ "v", "Display verbose details", v => versionCheckOptions.Verbose = true},
-				{ "p|managed-assembly-path=", "Relative path inside bundle to find managed assemblies if not Contents/MonoBundle", 
+				{ "p|managed-assembly-path=", "Relative path inside bundle to find managed assemblies if not Contents/MonoBundle",
 					v => versionCheckOptions.ManagedAssemblyPath = Optional.Option.Some (v) },
 				{ "m|allow-multiple-exe", "Accept bundle even with multiple managed assemblies in path", v => versionCheckOptions.AllowMultipleExecutables = true },
+				{ "a|scan-all-assemblies", "Instead of picking the first managed exe and scanning dependencies, scan all managed assemblies in bundle (Implies allow-multiple-exe)",
+					v => {
+						versionCheckOptions.AllowMultipleExecutables = true;
+						versionCheckOptions.ScanAllAssemblies = true;
+					}},
 			};
 
 			// Ignore any -psn_ arguments, since XS passes those in when debugging
