@@ -6,7 +6,7 @@ namespace VersionCheck
 	{
 		internal static Version FindBundleMinVersion (string infoPath, bool verbose)
 		{
-			string[] plistText = ProcessHelper.Run ("/usr/bin/plutil", "-convert xml1 -o - " + infoPath).Split ('\n');
+			string[] plistText = ProcessHelper.Run ("/usr/bin/plutil", "-convert xml1 -o - \"" + infoPath + "\"").Split ('\n');
 
 			int envIndex = -1;
 			for (int i = 0; i < plistText.Length; ++i)

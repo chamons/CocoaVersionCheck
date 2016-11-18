@@ -98,6 +98,7 @@
     <BundleResource Include="Resources\MinVersionTwoLines.plist" />
     <BundleResource Include="Resources\NoMinVersion.plist" />
     <BundleResource Include="Resources\StandardInfo.plist" />
+    <BundleResource Include="Resources\StandardInfo With Spaces.plist" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Mac\Xamarin.Mac.CSharp.targets" />
 </Project>

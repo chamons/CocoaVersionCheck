@@ -18,6 +18,13 @@ namespace CocoaVersionCheck.Tests
 		}
 
 		[Test]
+		public void VersionParser_WithSpaces_ReturnsExpected ()
+		{
+			Version foundVersion = VersionParser.FindBundleMinVersion (Path.Combine (ResourcePath, "StandardInfo With Spaces.plist"), false);
+			Assert.AreEqual (new Version (10, 11), foundVersion);
+		}
+
+		[Test]
 		public void VersionParser_NoMinVersion_ReturnsLion ()
 		{
 			Version foundVersion = VersionParser.FindBundleMinVersion (Path.Combine (ResourcePath, "NoMinVersion.plist"), false);
