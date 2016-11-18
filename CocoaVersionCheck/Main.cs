@@ -39,6 +39,12 @@ namespace CocoaVersionCheck
 			if (!VersionScanner.IsValidBundle (versionCheckOptions))
 				ShowHelp (os);
 
+			if (versionCheckOptions.ScanAllAssemblies && versionCheckOptions.ManagedAssemblyPath.HasValue)
+			{
+				Console.WriteLine ("scan-all-assemblies recursively scans all assemblies in bundles and thus setting managed-assembly-path is invalid.");
+				ShowHelp (os);
+			}
+
 			VersionScanner scanner = new VersionScanner (versionCheckOptions);
 			scanner.Scan ();
 			return scanner.PrintResults ();

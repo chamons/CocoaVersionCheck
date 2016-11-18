@@ -23,7 +23,6 @@ namespace VersionCheck
 				throw new InvalidOperationException ();
 
 			Options = options;
-
 		}
 
 		// TODO - Pass info or print detailed reason we're rejecting
@@ -37,6 +36,10 @@ namespace VersionCheck
 				
 				if (!Directory.Exists (options.BundlePath))
 					return false;
+
+				// If we're scanning entire bundle and it exists, just go with it
+				if (options.ScanAllAssemblies)
+					return true;
 
 				if (!File.Exists (Path.Combine (options.BundlePath, "Contents/Info.plist")))
 					return false;
@@ -67,14 +70,9 @@ namespace VersionCheck
 			List<ModuleDefinition> userModules;
 
 			if (Options.ScanAllAssemblies)
-			{
-				var files = Directory.EnumerateFiles (MonoBundlePath).Where (x => x.ToLower ().EndsWith (".exe", StringComparison.Ordinal) || x.ToLower ().EndsWith (".dll", StringComparison.Ordinal));
-				userModules = resolver.ResolveReferences (files);
-			}
+				userModules = resolver.ResolveReferencesRecursively (Options);
 			else
-			{
 				userModules = resolver.ResolveReferences (Directory.GetFiles (MonoBundlePath, "*.exe")[0]);
-			}
 		
 			if (Verbose)
 				Console.WriteLine ("User Assemblies Resolved: {0}", String.Join (" ", userModules.Select (x => x.Name)));

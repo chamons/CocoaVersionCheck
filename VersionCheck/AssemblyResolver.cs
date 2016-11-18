@@ -16,32 +16,59 @@ namespace VersionCheck
 
 		public AssemblyResolver (string monoBundlePath, bool verbose)
 		{
-			resolver = new DefaultAssemblyResolver ();
-			resolver.AddSearchDirectory (monoBundlePath);
-
-			readerParams = new ReaderParameters () { AssemblyResolver = resolver };
-
 			MonoBundlePath = monoBundlePath;
 			Verbose = verbose;
 		}
 
+		List<string> GenerateDirectoryList (IEnumerable<string> assemblies)
+		{
+			HashSet<string> dir = new HashSet<string> ();
+			foreach (var assembly in assemblies)
+				dir.Add (Path.GetDirectoryName (assembly));
+			return dir.ToList ();
+		}
+
+		public List<ModuleDefinition> ResolveReferencesRecursively (VersionCheckOptions options)
+		{
+			var allFiles = Directory.EnumerateFiles (options.BundlePath, "*", SearchOption.AllDirectories);
+			var managedAssemblies = allFiles.Where (x => x.ToLower ().EndsWith (".exe", StringComparison.Ordinal) || x.ToLower ().EndsWith (".dll", StringComparison.Ordinal));
+			
+			resolver = new DefaultAssemblyResolver ();
+
+			foreach (var dir in GenerateDirectoryList (managedAssemblies))
+				resolver.AddSearchDirectory (dir);
+
+			readerParams = new ReaderParameters () { AssemblyResolver = resolver };
+
+			return ResolveReferences (managedAssemblies);
+		}
+
 		public List<ModuleDefinition> ResolveReferences (string rootAssembly)
 		{
+			resolver = new DefaultAssemblyResolver ();
+			resolver.AddSearchDirectory (MonoBundlePath);
+
+			readerParams = new ReaderParameters () { AssemblyResolver = resolver };
+
 			return ResolveReferences (new List<string> () { rootAssembly });
 		}
 
-		public List<ModuleDefinition> ResolveReferences (IEnumerable<string> rootAssemblies)
+		List<ModuleDefinition> ResolveReferences (IEnumerable<string> rootAssemblies)
 		{
 			Stack<ModuleDefinition> modulesToResolve = new Stack<ModuleDefinition> ();
 			foreach (var root in rootAssemblies)
-				modulesToResolve.Push (ModuleDefinition.ReadModule (root, readerParams));
+			{
+				ModuleDefinition rootDef = SafeResolveDependency (root);
+				if (rootDef != null)
+					modulesToResolve.Push (rootDef);
+			}
 
 			List<ModuleDefinition> userModules = new List<ModuleDefinition> ();
 
 			while (modulesToResolve.Count > 0)
 			{
 				var current = modulesToResolve.Pop ();
-				if (userModules.Any (x => x.Name == current.Name))
+				if (userModules.Any (x => x.Name == current.Name) || IsBlackListed (current.Name))
 					continue;
 
 				if (Verbose)
@@ -51,17 +78,10 @@ namespace VersionCheck
 				{
 					if (Verbose)
 						Console.WriteLine ("\tFound Dependency {0}", dependency.Name);
-					
-					try
-					{
-						ModuleDefinition resolvedDependency = ResolveDependency (dependency.Name);
+
+					ModuleDefinition resolvedDependency = SafeResolveDependency (dependency.Name + ".dll");
+					if (resolvedDependency != null)
 						modulesToResolve.Push (resolvedDependency);
-					}
-					catch (FileNotFoundException)
-					{
-						if (Verbose)
-							Console.WriteLine ("\t\tUnable to find dependnecy {0}, skipping.", dependency.Name);
-					}
 				}
 
 				userModules.Add (current);
@@ -69,10 +89,18 @@ namespace VersionCheck
 			return userModules.ToList ();
 		}
 
-		ModuleDefinition ResolveDependency (string name)
+		ModuleDefinition SafeResolveDependency (string libPath)
 		{
-			string libPath = Path.Combine (MonoBundlePath, name + ".dll");
-			return ModuleDefinition.ReadModule (libPath, readerParams);
+			try
+			{
+				return ModuleDefinition.ReadModule (libPath, readerParams);
+			}
+			catch (Exception e)
+			{
+				if (Verbose)
+					Console.WriteLine ("\t\tUnable to find dependency {0}, skipping. {1}", Path.GetFileName (libPath), e.Message);
+			}
+			return null;
 		}
 
 		static HashSet <string> AssemblyBlacklist = new HashSet <string> { "mscorlib", "Xamarin.Mac", "gtk-sharp", "gdk-sharp", "Xwt", "Microsoft.CSharp", "Mono.Posix", "pango-sharp", "Mono.Cairo", "glib-sharp" };
