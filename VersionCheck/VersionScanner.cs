@@ -3,51 +3,50 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Mono.Cecil;
+using Optional;
 
 namespace VersionCheck
 {
 	public class VersionScanner
 	{
-		bool Verbose;
-		string BundlePath;
-		string MonoBundlePath => Path.Combine (BundlePath, "Contents/MonoBundle");
-		string InfoPath => Path.Combine (BundlePath, "Contents/Info.plist");
+		VersionCheckOptions Options;
 
-		DefaultAssemblyResolver resolver;
+		string MonoBundlePath => Path.Combine (Options.BundlePath, Options.ManagedAssemblyPath.ValueOr ("Contents/MonoBundle"));
+		string InfoPath => Path.Combine (Options.BundlePath, "Contents/Info.plist");
+		bool Verbose => Options.Verbose;
+
 		Dictionary<string, Version> Violations = new Dictionary<string, Version> ();
 
-		public VersionScanner (string bundlePath, bool verbose)
+		public VersionScanner (VersionCheckOptions options)
 		{
-			if (!IsValidBundle (bundlePath))
+			if (!IsValidBundle (options))
 				throw new InvalidOperationException ();
 
-			Verbose = verbose;
-			BundlePath = bundlePath;
+			Options = options;
 
-			resolver = new DefaultAssemblyResolver ();
-			resolver.AddSearchDirectory (MonoBundlePath);
 		}
 
 		// TODO - Pass info or print detailed reason we're rejecting
-		public static bool IsValidBundle (string bundlePath)
+		// 
+		public static bool IsValidBundle (VersionCheckOptions options)
 		{
 			try
 			{
-				if (String.IsNullOrEmpty (bundlePath))
+				if (String.IsNullOrEmpty (options.BundlePath))
 					return false;
 				
-				if (!Directory.Exists (bundlePath))
+				if (!Directory.Exists (options.BundlePath))
 					return false;
 
-				if (!File.Exists (Path.Combine (bundlePath, "Contents/Info.plist")))
+				if (!File.Exists (Path.Combine (options.BundlePath, "Contents/Info.plist")))
 					return false;
 
-				string monoBundlePath = Path.Combine (bundlePath, "Contents/MonoBundle");
+				string monoBundlePath = Path.Combine (options.BundlePath, options.ManagedAssemblyPath.ValueOr ("Contents/MonoBundle"));
 
 				if (!Directory.Exists (monoBundlePath))
 					return false;
 
-				if (Directory.GetFiles (monoBundlePath, "*.exe").Length != 1)
+				if (!options.AllowMultipleExecutables && Directory.GetFiles (monoBundlePath, "*.exe").Length != 1)
 					return false;
 
 				return true;
@@ -67,11 +66,10 @@ namespace VersionCheck
 
 			// 2. Get main.exe and user dll it depends on
 			string mainExecutable = Directory.GetFiles (MonoBundlePath, "*.exe")[0];
-			ModuleDefinition mainDef = ModuleDefinition.ReadModule (mainExecutable, new ReaderParameters () { AssemblyResolver = resolver });
 
-			List<ModuleDefinition> userModules = new List<ModuleDefinition> () { mainDef };
-			userModules.AddRange (mainDef.AssemblyReferences.Where (x => !AssemblyBlacklist.Contains (x.Name)). Select (x => ResolveDependency (x.Name)));
-
+			AssemblyResolver resolver = new AssemblyResolver (MonoBundlePath, Verbose);
+			List<ModuleDefinition> userModules = resolver.ResolveReferences (mainExecutable);
+		
 			if (Verbose)
 				Console.WriteLine ("User Assemblies Resolved: {0}", String.Join (" ", userModules.Select (x => x.Name)));
 
@@ -119,13 +117,6 @@ namespace VersionCheck
 			}
 		}
 
-		static string[] AssemblyBlacklist = new string[] { "mscorlib", "System.Core", "System", "System.Net.Http", "System.Xml", "Xamarin.Mac" };
-
-		ModuleDefinition ResolveDependency (string name)
-		{
-			string libPath = Path.Combine (MonoBundlePath, name + ".dll");
-			return ModuleDefinition.ReadModule (libPath, new ReaderParameters () { AssemblyResolver = resolver });
-		}
 
 		void CheckAttributes (Version minVersion, string name, IEnumerable<CustomAttribute> attributes)
 		{

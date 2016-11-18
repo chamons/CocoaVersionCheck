@@ -13,20 +13,28 @@ namespace CocoaVersionCheck
 		{
 			NSApplication.Init ();
 
-			bool verbose = false;
-			bool show_help = false;
+			VersionCheckOptions versionCheckOptions = new VersionCheckOptions ();
+
 			var os = new OptionSet () {
-				{ "h|?|help", "Displays the help", v => show_help = true},
-				{ "v", "Display verbose details", v => verbose = true},
+				{ "h|?|help", "Displays the help", v => versionCheckOptions.ShowHelp = true},
+				{ "v", "Display verbose details", v => versionCheckOptions.Verbose = true},
+				{ "p|managed-assembly-path=", "Relative path inside bundle to find managed assemblies if not Contents/MonoBundle", 
+					v => versionCheckOptions.ManagedAssemblyPath = Optional.Option.Some (v) },
+				{ "m|allow-multiple-exe", "Accept bundle even with multiple managed assemblies in path", v => versionCheckOptions.AllowMultipleExecutables = true },
 			};
 
 			// Ignore any -psn_ arguments, since XS passes those in when debugging
 			List<string> unprocessed = os.Parse (args).Where (x => !x.StartsWith ("-psn_", StringComparison.Ordinal)).ToList ();
 
-			if (show_help || unprocessed.Count != 1 || !VersionScanner.IsValidBundle (unprocessed[0]))
+			if (versionCheckOptions.ShowHelp || unprocessed.Count != 1)
 				ShowHelp (os);
 
-			VersionScanner scanner = new VersionScanner (unprocessed[0], verbose);
+			versionCheckOptions.BundlePath = unprocessed[0];
+
+			if (!VersionScanner.IsValidBundle (versionCheckOptions))
+				ShowHelp (os);
+
+			VersionScanner scanner = new VersionScanner (versionCheckOptions);
 			scanner.Scan ();
 			return scanner.PrintResults ();
 		}
