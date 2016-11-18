@@ -70,7 +70,7 @@ namespace VersionCheck
 			List<ModuleDefinition> userModules;
 
 			if (Options.ScanAllAssemblies)
-				userModules = resolver.ResolveReferencesRecursively (Options);
+				userModules = resolver.ResolveReferencesEntireBundle (Options.BundlePath);
 			else
 				userModules = resolver.ResolveReferences (Directory.GetFiles (MonoBundlePath, "*.exe")[0]);
 		

@@ -28,9 +28,9 @@ namespace VersionCheck
 			return dir.ToList ();
 		}
 
-		public List<ModuleDefinition> ResolveReferencesRecursively (VersionCheckOptions options)
+		public List<ModuleDefinition> ResolveReferencesEntireBundle (string bundlePath)
 		{
-			var allFiles = Directory.EnumerateFiles (options.BundlePath, "*", SearchOption.AllDirectories);
+			var allFiles = Directory.EnumerateFiles (bundlePath, "*", SearchOption.AllDirectories);
 			var managedAssemblies = allFiles.Where (x => x.ToLower ().EndsWith (".exe", StringComparison.Ordinal) || x.ToLower ().EndsWith (".dll", StringComparison.Ordinal));
 			
 			resolver = new DefaultAssemblyResolver ();
@@ -40,7 +40,7 @@ namespace VersionCheck
 
 			readerParams = new ReaderParameters () { AssemblyResolver = resolver };
 
-			return ResolveReferences (managedAssemblies);
+			return ResolveReferences (managedAssemblies, false);
 		}
 
 		public List<ModuleDefinition> ResolveReferences (string rootAssembly)
@@ -50,10 +50,10 @@ namespace VersionCheck
 
 			readerParams = new ReaderParameters () { AssemblyResolver = resolver };
 
-			return ResolveReferences (new List<string> () { rootAssembly });
+			return ResolveReferences (new List<string> () { rootAssembly }, true);
 		}
 
-		List<ModuleDefinition> ResolveReferences (IEnumerable<string> rootAssemblies)
+		List<ModuleDefinition> ResolveReferences (IEnumerable<string> rootAssemblies, bool resolveDependencies)
 		{
 			Stack<ModuleDefinition> modulesToResolve = new Stack<ModuleDefinition> ();
 			foreach (var root in rootAssemblies)
@@ -73,15 +73,19 @@ namespace VersionCheck
 
 				if (Verbose)
 					Console.WriteLine ("Resolving {0}", current.Name);
-				
-				foreach (var dependency in current.AssemblyReferences.Where (x => !IsBlackListed (x.Name)))
-				{
-					if (Verbose)
-						Console.WriteLine ("\tFound Dependency {0}", dependency.Name);
 
-					ModuleDefinition resolvedDependency = SafeResolveDependency (dependency.Name + ".dll");
-					if (resolvedDependency != null)
-						modulesToResolve.Push (resolvedDependency);
+				// If we're scanning entire bundle, no need to resolve dependencies since will be covered 
+				if (resolveDependencies)
+				{
+					foreach (var dependency in current.AssemblyReferences.Where (x => !IsBlackListed (x.Name)))
+					{
+						if (Verbose)
+							Console.WriteLine ("\tFound Dependency {0}", dependency.Name);
+
+						ModuleDefinition resolvedDependency = SafeResolveDependency (dependency.Name + ".dll");
+						if (resolvedDependency != null)
+							modulesToResolve.Push (resolvedDependency);
+					}
 				}
 
 				userModules.Add (current);
